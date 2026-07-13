@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office of Digital Technologies</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#003359;--navy-lt:#0a4a75;--navy-mid:#336685;--navy-soft:#5c8da8;--navy-dk:#002240;
+  --green:#44D62C;--green-dk:#38b024;--green-lt:#5ae048;--green-pale:#a8eea0;--green-bg:#d9f5d5;
+  --silver:#A5ACAF;--silver-lt:#c5cacc;--silver-lr:#d0d5d8;--silver-pale:#f0f2f3;
+  --page:#EEEEEE;--desc:#58676e;
+  --disp:'Montserrat',sans-serif;--body:'Source Sans 3',system-ui,sans-serif;
+  --r:14px;
+  --r-sm:10px;
+  --shadow:0 1px 2px rgba(0,51,89,.04), 0 4px 16px rgba(0,51,89,.06);
+  --shadow-h:0 2px 4px rgba(0,51,89,.05), 0 12px 32px rgba(0,51,89,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--body);background:var(--page);color:var(--navy);
+  line-height:1.45;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  letter-spacing:-0.01em;
+  height:100vh;overflow:hidden;
+}
+#board{height:100%;display:flex;flex-direction:column}
+
+/* ===== TRANSLUCENT TOP BAR (macOS chrome) ===== */
+.topbar{
+  flex:0 0 auto;z-index:60;
+  background:rgba(238,238,238,.72);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:.5px solid rgba(0,51,89,.10);
+  padding:10px 0;
+}
+.topbar-in{max-width:none;margin:0 auto;padding:0 26px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.tb-left{display:flex;align-items:center;gap:22px;min-width:0}
+.eyebrow{
+  font-family:var(--disp);font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--green-dk);display:flex;align-items:center;gap:8px;margin-bottom:3px;
+}
+.eyebrow::before{content:"";width:16px;height:2px;background:var(--green)}
+.tb-h1{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.6px;line-height:1.05;color:var(--navy);white-space:nowrap}
+.tb-sub{font-family:var(--body);font-weight:300;font-size:11px;color:var(--silver);letter-spacing:0;margin-top:2px;white-space:nowrap}
+.hero-meta{display:flex;gap:22px;flex-wrap:nowrap}
+.hm b{display:block;font-family:var(--disp);font-weight:600;font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:var(--silver);margin-bottom:1px}
+.hm span{font-size:12px;color:var(--navy);font-weight:500;white-space:nowrap}
+.tb-actions{display:flex;gap:8px;flex-shrink:0}
+.btn{
+  font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:-.1px;
+  color:var(--navy);background:rgba(255,255,255,.8);
+  border:.5px solid rgba(0,51,89,.12);
+  padding:7px 15px;border-radius:9px;cursor:pointer;
+  transition:background .18s ease, transform .12s ease, box-shadow .18s ease;
+}
+.btn:hover{background:#fff;box-shadow:0 2px 8px rgba(0,51,89,.08)}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.btn.primary{background:var(--navy);color:#fff;border-color:transparent}
+.btn.primary:hover{background:var(--navy-lt)}
+
+/* ===== MAIN GRID SHELL, one viewport, no scroll ===== */
+.main{
+  flex:1 1 auto;min-height:0;
+  max-width:none;width:100%;margin:0 auto;
+  padding:10px 26px 14px;
+  display:grid;gap:10px;
+  grid-template-columns:repeat(12,1fr);
+  grid-template-rows:repeat(3,minmax(0,1fr));
+  grid-template-areas:
+    "ado ado ado ado prod prod prod prod prod fund fund fund"
+    "eq  eq  eq  eq  eq   cap  cap  cap  ass  ass  cur  cur"
+    "res res res eng eng  sum  sum  sum  sum  ask  ask  ask";
+}
+
+/* ===== SECTION CARD (apple: no top border, soft shadow, large radius) ===== */
+.scard{
+  background:#fff;border-radius:var(--r);
+  box-shadow:var(--shadow);
+  overflow:hidden;min-height:0;min-width:0;
+  display:flex;flex-direction:column;
+  padding:10px 13px 11px;
+  transition:box-shadow .28s cubic-bezier(.2,.8,.2,1);
+}
+.scard:hover{box-shadow:var(--shadow-h)}
+.sc-hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px;flex:0 0 auto}
+.sc-hd h2{font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:-.3px;color:var(--navy);white-space:nowrap}
+.sc-hd .note{font-size:10px;color:var(--silver);font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-bd{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+
+/* ===== KPI CHIP (compact card face, opens sheet) ===== */
+.kwrap{display:grid;gap:6px;flex:1;min-height:0}
+.kchip{
+  background:var(--silver-pale);border-radius:var(--r-sm);
+  padding:6px 9px;cursor:pointer;min-width:0;min-height:0;
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  transition:background .18s, transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .2s;
+}
+.kchip:hover{background:#fff;box-shadow:var(--shadow-h);transform:translateY(-1px)}
+.kchip:active{transform:translateY(0) scale(.985)}
+.kchip:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.kchip > div:first-child{min-width:0}
+.kchip .n{font-family:var(--disp);font-weight:700;font-size:clamp(15px,2.1vh,21px);line-height:1;letter-spacing:-.8px;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kchip .n small{font-size:.62em;font-weight:600;letter-spacing:-.3px}
+.kchip .lab{font-family:var(--disp);font-weight:600;font-size:10px;letter-spacing:-.1px;color:var(--navy);line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kchip .sub{font-size:9.5px;color:var(--silver);font-weight:300;line-height:1.15;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kchip .sub.g{color:var(--green-dk);font-weight:500}
+.chev{
+  width:18px;height:18px;border-radius:50%;
+  background:rgba(255,255,255,.85);color:var(--navy-lt);
+  display:flex;align-items:center;justify-content:center;
+  font-size:7px;flex-shrink:0;
+  transition:background .2s,color .2s;
+}
+.kchip:hover .chev,.irow:hover .chev{background:var(--green-bg);color:var(--green-dk)}
+
+/* ===== LIST ROW (compact, opens sheet) ===== */
+.irow{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:4px 7px;border-radius:8px;cursor:pointer;min-height:0;flex:1;
+  transition:background .16s;
+}
+.irow:hover{background:var(--silver-pale)}
+.irow:focus-visible{outline:3px solid var(--green);outline-offset:1px}
+.irow .rl{min-width:0}
+.irow .rk{font-family:var(--disp);font-weight:600;font-size:11px;letter-spacing:-.1px;color:var(--navy);line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.irow .rs{font-size:9.5px;color:var(--silver);font-weight:300;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
+.irow .rs.g{color:var(--green-dk);font-weight:500}
+.irow .rr{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.irow .rn{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--navy);font-variant-numeric:tabular-nums;min-width:14px;text-align:right}
+.irow .chev{background:var(--silver-pale);width:16px;height:16px;font-size:6px}
+.sc-bd > .irow + .irow,.eq-rows .irow + .irow{border-top:.5px solid rgba(0,51,89,.06)}
+
+/* ===== PILL ===== */
+.pill{font-family:var(--disp);font-weight:700;font-size:8px;letter-spacing:.2px;padding:2.5px 7px;border-radius:6px;white-space:nowrap;display:inline-block}
+.pill.live{background:var(--green-bg);color:var(--green-dk)}
+.pill.dev{background:rgba(10,74,117,.10);color:var(--navy-lt)}
+.pill.plan{background:var(--silver-pale);color:var(--silver)}
+a.pill.live:hover{background:var(--green-dk);color:#fff}
+a.pill:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+
+/* ===== CHARTS ===== */
+.chartbox{min-height:0;display:flex;align-items:center;justify-content:center}
+.chartbox svg{width:100%;height:100%;display:block}
+.chart-t{font-family:var(--disp);font-weight:600;font-size:11.5px;color:var(--navy);letter-spacing:-.2px}
+.chart-s{font-size:9.5px;color:var(--silver);font-weight:300}
+
+/* adoption layout */
+.ado-bd{display:grid;grid-template-columns:1fr .95fr;gap:8px;align-items:center;flex:1;min-height:0;cursor:pointer;border-radius:10px;transition:background .16s;padding:2px}
+.ado-bd:hover{background:var(--silver-pale)}
+.ado-bd:focus-visible{outline:3px solid var(--green);outline-offset:1px}
+.gauge-main{text-align:center;min-height:0;display:flex;flex-direction:column;justify-content:center;height:100%}
+.gauge-main .chartbox{flex:1;min-height:0}
+.gauge-cap{font-family:var(--disp);font-weight:600;font-size:9px;letter-spacing:1.2px;color:var(--navy);margin-top:2px}
+.gauge-side{display:flex;flex-direction:column;gap:8px;justify-content:center;min-height:0}
+.gside{display:flex;align-items:center;gap:9px;min-height:0}
+.gside .gsvg{width:68px;flex-shrink:0}
+.ado-foot{flex:0 0 auto;font-size:9.5px;color:var(--silver);font-weight:300;text-align:center;padding-top:4px;border-top:.5px solid rgba(0,51,89,.06);margin-top:4px}
+.gside .gsvg svg{width:100%;height:auto;display:block}
+.gside b{font-family:var(--disp);font-weight:600;font-size:8.5px;letter-spacing:1.1px;color:var(--navy)}
+.gside i{display:block;font-style:normal;font-size:8.5px;font-weight:400;letter-spacing:0;margin-top:1px}
+.gside i.gr{color:var(--green-dk)}
+.gside i.rd{color:#b0453a}
+
+/* production layout */
+.prod-bd{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
+.prod-chart{flex:1;min-height:0;cursor:default}
+.prod-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;flex:0 0 auto}
+
+/* equipment layout */
+.eq-bd{display:grid;grid-template-columns:1.2fr .85fr;gap:9px;flex:1;min-height:0}
+.eq-left{display:flex;flex-direction:column;gap:6px;min-height:0}
+.eq-chips{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,minmax(0,1fr));gap:6px;flex:1;min-height:0}
+.eq-rows{flex:0 0 auto;display:flex;flex-direction:column}
+.eq-rows .irow{flex:0 0 auto;padding:3.5px 7px}
+.eq-right{display:flex;flex-direction:column;min-height:0;background:var(--silver-pale);border-radius:var(--r-sm);padding:7px 9px 5px}
+.eq-right .chart-t{font-size:10.5px}
+.eq-right .chart-s{font-size:8.5px;margin-bottom:2px}
+.eq-right .chartbox{flex:1;min-height:0}
+
+/* ===== FUND CARD (the only navy one) ===== */
+.fund{
+  grid-area:fund;
+  background:linear-gradient(135deg,#002240 0%,#003359 62%,#0a4a75 100%);
+  border-radius:var(--r);position:relative;overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,34,64,.18), 0 16px 40px rgba(0,34,64,.20);
+  color:#fff;min-height:0;
+}
+.fund::before{content:"";position:absolute;top:-60px;left:-40px;width:280px;height:280px;background:radial-gradient(circle,rgba(68,214,44,.10),transparent 68%)}
+.fund::after{content:"";position:absolute;bottom:-80px;right:-50px;width:300px;height:300px;background:radial-gradient(circle,rgba(165,172,175,.06),transparent 70%)}
+.fund-in{position:relative;z-index:2;padding:13px 17px;display:flex;flex-direction:column;gap:8px;justify-content:center;height:100%;min-height:0}
+.fund-pill{
+  display:inline-block;background:var(--green);color:var(--navy-dk);
+  font-family:var(--disp);font-weight:800;font-size:8px;letter-spacing:1.8px;text-transform:uppercase;
+  padding:3px 9px;border-radius:5px;align-self:flex-start;
+}
+.fund-n{font-family:var(--disp);font-weight:700;font-size:clamp(22px,3.4vh,32px);line-height:1;letter-spacing:-1.4px;color:#fff}
+.fund-cap{font-family:var(--disp);font-weight:600;font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:var(--green-pale);margin-top:3px}
+.fund-r .fname{font-family:var(--disp);font-weight:600;font-size:12px;color:#fff;letter-spacing:-.2px}
+.fund-r .fpurp{font-size:10px;color:var(--silver-lt);margin-top:3px;line-height:1.4;font-weight:300;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.fund-facts{display:flex;gap:16px;flex-wrap:wrap;margin-top:7px;padding-top:7px;border-top:.5px solid rgba(255,255,255,.14)}
+.ff b{display:block;font-family:var(--disp);font-weight:600;font-size:7.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--silver);margin-bottom:1px}
+.ff span{font-family:var(--disp);font-weight:600;font-size:10.5px;color:#fff}
+
+/* ===== EXEC SUMMARY, wins and concerns ===== */
+.sum-bd{display:grid;grid-template-columns:1fr 1fr;gap:7px;flex:1;min-height:0}
+.wins{background:#fff;border-radius:var(--r-sm);overflow:hidden;display:flex;flex-direction:column;min-height:0;border:.5px solid rgba(0,51,89,.07);cursor:pointer;transition:box-shadow .2s,transform .2s}
+.wins:hover{box-shadow:var(--shadow-h);transform:translateY(-1px)}
+.wins:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.wc-hd{font-family:var(--disp);font-weight:700;font-size:9px;letter-spacing:1.4px;text-transform:uppercase;padding:5px 10px;display:flex;align-items:center;gap:7px;flex:0 0 auto}
+.wc-hd::before{content:"";width:6px;height:6px;border-radius:50%}
+.wc-hd.win{background:var(--green-bg);color:var(--green-dk)}
+.wc-hd.win::before{background:var(--green-dk)}
+.wc-hd.con{background:var(--silver-pale);color:var(--navy-lt)}
+.wc-hd.con::before{background:var(--navy-lt)}
+.wc-row{display:grid;grid-template-columns:14px 1fr;gap:6px;padding:3px 10px;border-top:.5px solid rgba(0,51,89,.07);align-items:center;flex:1;min-height:0}
+.wc-n{font-family:var(--disp);font-weight:700;font-size:10.5px;color:var(--silver);line-height:1.3}
+.wins .wc-n{color:var(--green-dk)}
+.wins.concern .wc-n{color:var(--navy-lt)}
+.wc-b{font-size:10px;color:var(--navy);line-height:1.25;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ===== ASKS, navy rows ===== */
+.ask-bd{display:flex;flex-direction:column;gap:7px;flex:1;min-height:0}
+.askrow{background:var(--navy-dk);border-radius:var(--r-sm);overflow:hidden;position:relative;cursor:pointer;transition:box-shadow .25s,transform .2s;flex:1;min-height:0;display:flex;align-items:center}
+.askrow::before{content:"";position:absolute;top:-50px;left:-30px;width:220px;height:220px;background:radial-gradient(circle,rgba(68,214,44,.09),transparent 70%)}
+.askrow:hover{box-shadow:0 10px 30px rgba(0,34,64,.18);transform:translateY(-1px)}
+.askrow:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.askrow-top{position:relative;z-index:2;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 14px;width:100%}
+.ask-pill{font-family:var(--disp);font-weight:800;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--navy-dk);background:var(--green);padding:3px 8px;border-radius:5px;white-space:nowrap}
+.askrow-t{font-family:var(--disp);font-weight:600;font-size:11px;color:#fff;letter-spacing:-.2px;line-height:1.3}
+.askrow-chev{font-size:7px;color:var(--green)}
+
+/* ===== SHEET OVERLAY (details live here) ===== */
+.ovl{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,34,64,.32);
+  backdrop-filter:saturate(140%) blur(8px);
+  -webkit-backdrop-filter:saturate(140%) blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:28px;
+  opacity:0;pointer-events:none;transition:opacity .28s ease;
+}
+.ovl.on{opacity:1;pointer-events:auto}
+.sheet{
+  background:#fff;border-radius:18px;
+  box-shadow:0 8px 24px rgba(0,34,64,.18), 0 32px 80px rgba(0,34,64,.28);
+  width:min(560px,94vw);max-height:84vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  transform:translateY(14px) scale(.97);transition:transform .32s cubic-bezier(.2,.8,.2,1);
+}
+.ovl.on .sheet{transform:translateY(0) scale(1)}
+.sheet.navy{background:linear-gradient(135deg,#002240 0%,#003359 62%,#0a4a75 100%);color:#fff}
+.sh-top{padding:18px 22px 0;flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.sh-eyebrow{font-family:var(--disp);font-weight:700;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green-dk);display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sh-eyebrow::before{content:"";width:16px;height:2px;background:var(--green)}
+.sheet.navy .sh-eyebrow{color:var(--green-pale)}
+.sh-title{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.6px;color:var(--navy);line-height:1.15}
+.sheet.navy .sh-title{color:#fff}
+.sh-x{
+  width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;flex-shrink:0;
+  background:var(--silver-pale);color:var(--navy-lt);font-size:13px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .18s,color .18s;
+}
+.sh-x:hover{background:var(--green-bg);color:var(--green-dk)}
+.sheet.navy .sh-x{background:rgba(255,255,255,.12);color:#fff}
+.sheet.navy .sh-x:hover{background:var(--green);color:var(--navy-dk)}
+.sh-body{padding:12px 22px 20px;overflow-y:auto;min-height:0}
+
+/* detail primitives inside the sheet (same as original) */
+.dsep{height:.5px;background:rgba(0,51,89,.10);margin-bottom:12px}
+.sheet.navy .dsep{background:rgba(255,255,255,.14)}
+.dh{font-family:var(--disp);font-weight:700;font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--green-dk);margin-bottom:8px}
+.sheet.navy .dh{color:var(--green-pale)}
+.drow{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:6px 0;border-bottom:.5px solid rgba(0,51,89,.07)}
+.drow:last-of-type{border-bottom:none}
+.drow .k{font-size:13px;color:var(--navy);font-weight:400}
+.drow .k em{display:block;font-style:normal;font-size:11.5px;color:var(--silver);font-weight:300;margin-top:1px}
+.drow .v{font-family:var(--disp);font-weight:600;font-size:12.5px;color:var(--navy);white-space:nowrap;font-variant-numeric:tabular-nums}
+.drow .v.g{color:var(--green-dk)}
+.dnote{font-size:12.5px;color:var(--desc);line-height:1.55;margin-top:10px;font-weight:300}
+.dnote b{color:var(--navy);font-weight:600}
+
+/* alert panel reused inside sheets */
+.alert{background:var(--green-bg);border-radius:var(--r-sm);padding:12px 14px;border:.5px solid rgba(56,176,36,.20);margin-top:12px}
+.alert.quiet{background:var(--silver-pale);border-color:rgba(0,51,89,.08)}
+.alert .ah{font-family:var(--disp);font-weight:700;font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:var(--navy);margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.alert .ah::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green-dk)}
+.alert.quiet .ah::before{background:var(--silver)}
+.alert .ab{font-size:12.5px;color:var(--desc);line-height:1.55;font-weight:300}
+.alert .ab b{color:var(--navy);font-weight:600}
+
+/* exec summary full text inside sheet */
+.sh-wc{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:10px 0;border-bottom:.5px solid rgba(0,51,89,.07);align-items:start}
+.sh-wc:last-of-type{border-bottom:none}
+.sh-wc .wn{font-family:var(--disp);font-weight:700;font-size:14px;line-height:1.45}
+.sh-wc .wb{font-size:13px;color:var(--desc);line-height:1.55;font-weight:300}
+.sh-wc .wb b{color:var(--navy);font-weight:600;display:block;margin-bottom:2px}
+
+/* ask sheet internals (same as original askrow detail) */
+.ask-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.mini{background:rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;border-left:2px solid var(--silver)}
+.mini.new{border-left-color:var(--green)}
+.mini-n{font-family:var(--disp);font-weight:600;font-size:12px;color:#fff;line-height:1.25}
+.mini.new .mini-n{color:var(--green-pale)}
+.mini-r{font-size:10.5px;color:var(--silver-lt);margin-top:3px;font-weight:300;line-height:1.35}
+.askrow-note{font-size:12.5px;color:var(--silver-lt);line-height:1.55;font-weight:300;margin-top:14px}
+.askrow-note b{color:#fff;font-weight:600}
+.mod-track{display:flex;align-items:stretch;gap:7px;flex-wrap:wrap}
+.mod{flex:1;min-width:96px;background:rgba(255,255,255,.06);border-radius:8px;padding:10px 12px;border-top:2px solid var(--silver)}
+.mod.req{background:rgba(68,214,44,.12);border-top-color:var(--green)}
+.mod-tag{font-family:var(--disp);font-weight:800;font-size:7.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--navy-dk);background:var(--green);padding:2px 6px;border-radius:3px;display:inline-block}
+.mod-tag.opt{background:rgba(255,255,255,.12);color:var(--silver-lt)}
+.mod-t{font-family:var(--disp);font-weight:600;font-size:13px;color:#fff;margin-top:7px;letter-spacing:-.2px}
+.mod.req .mod-t{color:var(--green-pale)}
+.mod-s{font-size:10.5px;color:var(--silver-lt);font-weight:300;margin-top:2px}
+.mod-arrow{display:flex;align-items:center;color:var(--silver);font-size:12px;flex-shrink:0}
+
+/* grid area bindings */
+#s-ado{grid-area:ado}#s-prod{grid-area:prod}#s-eq{grid-area:eq}#s-cap{grid-area:cap}
+#s-ass{grid-area:ass}#s-cur{grid-area:cur}#s-res{grid-area:res}#s-eng{grid-area:eng}
+#s-sum{grid-area:sum}#s-ask{grid-area:ask}
+
+/* hidden sheet content store */
+#store{display:none}
+
+/* fallback: small screens scroll (a phone cannot hold the whole board) */
+@media(max-width:980px){
+  body{height:auto;overflow:auto}
+  #board{height:auto;display:block}
+  .main{display:flex;flex-direction:column;height:auto}
+  .scard,.fund{min-height:190px}
+  .topbar-in{flex-wrap:wrap}
+  .hero-meta{flex-wrap:wrap;gap:12px}
+}
+
+/* ===== PRINT: one US Letter landscape page ===== */
+@media print{
+  @page{size:letter landscape;margin:6mm}
+  html{background:#fff!important}
+  /* clip the body to exactly one page so no blank pages follow the scaled board */
+  body{background:#fff!important;height:770px;overflow:hidden}
+  /* lay the board out at a fixed landscape size (same grid as on screen), then scale to the page */
+  #board{
+    width:1900px;height:1448px;
+    transform:scale(.5315);transform-origin:top left;
+    display:flex;flex-direction:column;
+  }
+  .tb-actions{display:none!important}
+  .ovl{display:none!important}
+  .chev,.askrow-chev{display:none!important}
+  .sc-hd .note,.ado-foot{display:none!important}
+  .topbar{background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+  /* flatten shadows for clean paper output, keep the design's hairlines */
+  .scard{box-shadow:none;border:.5px solid var(--silver-lr)}
+  .fund{box-shadow:none}
+  /* print rasterizers turn the radial glow decorations into solid blobs; remove them
+     and swap gradient fills for flat navy so the dark cards print clean */
+  .fund::before,.fund::after,.askrow::before{display:none!important;content:none!important}
+  .fund{background:var(--navy)!important}
+  .askrow{background:var(--navy-dk)!important}
+  .askrow:hover{transform:none;box-shadow:none}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<div id="board">
+
+<!-- TOP BAR: chrome + hero condensed into one strip -->
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="tb-left">
+      <div>
+        <div class="eyebrow">Monthly Report &middot; June 2026</div>
+        <div class="tb-h1">Digital Technologies at DCG</div>
+        <div class="tb-sub">Office of Digital Technologies &middot; Dental College of Georgia, Augusta University</div>
+      </div>
+      <div class="hero-meta">
+        <div class="hm"><b>Submitted by</b><span>Rafael Rocha Pacheco</span></div>
+        <div class="hm"><b>Reporting to</b><span>Deans' Meeting (Interim Dean Theresa Gonzalez)</span></div>
+        <div class="hm"><b>Vector</b><span>Innovation &amp; Technology</span></div>
+      </div>
+    </div>
+    <div class="tb-actions">
+      <button class="btn primary" onclick="window.print()">Export PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ============ ADOPTION ============ -->
+  <div class="scard" id="s-ado">
+    <div class="sc-hd"><h2>Digital Adoption</h2><span class="note">The Dean's headline utilization metric</span></div>
+    <div class="sc-bd">
+      <div class="ado-bd" tabindex="0" role="button" data-sheet="m-ado" title="Tap for the full read">
+        <div class="gauge-main">
+          <div class="chartbox"><svg viewBox="0 0 190 132" id="gaugeSvg" preserveAspectRatio="xMidYMid meet"></svg></div>
+          <div class="gauge-cap">OVERALL</div>
+        </div>
+        <div class="gauge-side">
+          <div class="gside">
+            <div class="gsvg"><svg viewBox="0 0 190 118" id="studSvg"></svg></div>
+            <div><b>STUDENTS</b><i class="gr">Green band</i></div>
+          </div>
+          <div class="gside">
+            <div class="gsvg"><svg viewBox="0 0 190 118" id="facSvg"></svg></div>
+            <div><b>FACULTY</b><i class="rd">Red band, the constraint</i></div>
+          </div>
+        </div>
+      </div>
+      <div class="ado-foot">Positions are informed estimates as of July 2026, no measured percentage yet &middot; tap for the full read</div>
+    </div>
+  </div>
+
+  <!-- ============ PRODUCTION ============ -->
+  <div class="scard" id="s-prod">
+    <div class="sc-hd"><h2>Digital Production</h2><span class="note">Predoctoral in-house milled output &middot; twelvefold growth to a 2025 peak, then a fall back to sporadic</span></div>
+    <div class="sc-bd prod-bd">
+      <div class="chartbox prod-chart"><svg viewBox="0 0 700 200" id="prodSvg" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <div class="prod-chips">
+        <div class="kchip" tabindex="0" role="button" data-sheet="m-194">
+          <div><div class="n">194</div><div class="lab">Residency Pieces Milled</div><div class="sub g">2026, Grad Pros</div></div>
+          <div class="chev">&#9660;</div>
+        </div>
+        <div class="kchip" tabindex="0" role="button" data-sheet="m-peak">
+          <div><div class="n">600<small>+</small></div><div class="lab">Peak Output, 2025</div><div class="sub g">12x growth in two years</div></div>
+          <div class="chev">&#9660;</div>
+        </div>
+        <div class="kchip" tabindex="0" role="button" data-sheet="m-tech">
+          <div><div class="n">11<small>mo</small></div><div class="lab">Technician Line Open</div><div class="sub">Since August 2025</div></div>
+          <div class="chev">&#9660;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FUND ============ -->
+  <div class="fund">
+    <div class="fund-in">
+      <div>
+        <span class="fund-pill">Expendable</span>
+        <div class="fund-n" style="margin-top:8px">$38,828</div>
+        <div class="fund-cap">Available Balance</div>
+      </div>
+      <div class="fund-r">
+        <div class="fname">DCG Digital Dentistry Support Fund</div>
+        <div class="fpurp">Supports 3D printing and modeling, intraoral scanning and digital impressions, and computer-assisted implant planning and guided surgery.</div>
+        <div class="fund-facts">
+          <div class="ff"><b>Fund ID</b><span>212027</span></div>
+          <div class="ff"><b>Area</b><span>Dean's Office</span></div>
+          <div class="ff"><b>Signatory</b><span>R. Pacheco</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EQUIPMENT ============ -->
+  <div class="scard" id="s-eq">
+    <div class="sc-hd"><h2>Equipment &amp; Infrastructure</h2><span class="note">Tap any tile for brands, models, and locations</span></div>
+    <div class="sc-bd eq-bd">
+      <div class="eq-left">
+        <div class="eq-chips">
+          <div class="kchip" tabindex="0" role="button" data-sheet="m-scan">
+            <div><div class="n">46</div><div class="lab">Intraoral Scanners</div><div class="sub">Planmeca Emerald</div></div>
+            <div class="chev">&#9660;</div>
+          </div>
+          <div class="kchip" tabindex="0" role="button" data-sheet="m-mill">
+            <div><div class="n">4</div><div class="lab">Milling Units</div><div class="sub">PlanMill, Roland</div></div>
+            <div class="chev">&#9660;</div>
+          </div>
+          <div class="kchip" tabindex="0" role="button" data-sheet="m-print">
+            <div><div class="n">5</div><div class="lab">3D Printers</div><div class="sub">Formlabs SLA</div></div>
+            <div class="chev">&#9660;</div>
+          </div>
+          <div class="kchip" tabindex="0" role="button" data-sheet="m-cad">
+            <div><div class="n">6</div><div class="lab">CAD Licenses</div><div class="sub">Romexis, PlanCAD</div></div>
+            <div class="chev">&#9660;</div>
+          </div>
+          <div class="kchip" tabindex="0" role="button" data-sheet="m-cbct">
+            <div><div class="n">5</div><div class="lab">CBCT Units</div><div class="sub">3D imaging</div></div>
+            <div class="chev">&#9660;</div>
+          </div>
+          <div class="kchip" tabindex="0" role="button" data-sheet="m-sens">
+            <div><div class="n">73</div><div class="lab">Digital Sensors</div><div class="sub">Radiography</div></div>
+            <div class="chev">&#9660;</div>
+          </div>
+        </div>
+        <div class="eq-rows">
+          <div class="irow" tabindex="0" role="button" data-sheet="m-itline">
+            <div class="rl"><div class="rk">Dedicated IT Line</div><div class="rs">Chairside support during patient care</div></div>
+            <div class="rr"><span class="pill dev">In Development</span><div class="chev">&#9660;</div></div>
+          </div>
+          <div class="irow" tabindex="0" role="button" data-sheet="m-eqnote">
+            <div class="rl"><div class="rk">Equipment Note</div><div class="rs">Formlabs 4 commissioned &middot; Viso incoming &middot; sintering ovens confirming</div></div>
+            <div class="rr"><div class="chev">&#9660;</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="eq-right">
+        <div class="chart-t">Scanner Distribution</div>
+        <div class="chart-s">Where the 46 units live</div>
+        <div class="chartbox"><svg viewBox="0 0 340 200" id="scanSvg" preserveAspectRatio="xMidYMid meet"></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MANUFACTURING CAPABILITIES ============ -->
+  <div class="scard" id="s-cap">
+    <div class="sc-hd"><h2>Manufacturing Capabilities</h2><span class="note">Tap for full output lists</span></div>
+    <div class="sc-bd" style="gap:5px">
+      <div class="irow" tabindex="0" role="button" data-sheet="m-routine">
+        <div class="rl"><div class="rk">Routine Outputs</div><div class="rs g">Produced regularly</div></div>
+        <div class="rr"><span class="rn">5</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-under">
+        <div class="rl"><div class="rk">Under-Used Capacity</div><div class="rs">Capable, rarely produced</div></div>
+        <div class="rr"><span class="rn">9</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-notavail">
+        <div class="rl"><div class="rk">Not Available</div><div class="rs">Blocked or held</div></div>
+        <div class="rr"><span class="rn">3</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-opp">
+        <div class="rl"><div class="rk">Opportunity</div><div class="rs g">Predoctoral milling</div></div>
+        <div class="rr"><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-nextrep">
+        <div class="rl"><div class="rk">Next Report</div><div class="rs">Exact unit counts by output type</div></div>
+        <div class="rr"><div class="chev">&#9660;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ASSESSMENT ============ -->
+  <div class="scard" id="s-ass">
+    <div class="sc-hd"><h2>Assessment Tech</h2></div>
+    <div class="sc-bd" style="gap:5px">
+      <div class="irow" tabindex="0" role="button" data-sheet="m-compare">
+        <div class="rl"><div class="rk">Compare Stations</div><div class="rs g">Simulation Lab</div></div>
+        <div class="rr"><span class="rn">114</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-haptic">
+        <div class="rl"><div class="rk">Haptic Simulators</div><div class="rs">Preclinical assessment</div></div>
+        <div class="rr"><span class="rn">3</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-gradefx">
+        <div class="rl"><div class="rk">Grade FX</div><div class="rs">Rubric-based digital grading</div></div>
+        <div class="rr"><span class="pill live">Functional</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-gradefxp">
+        <div class="rl"><div class="rk">Grade FX+</div><div class="rs">Machine learning tier</div></div>
+        <div class="rr"><span class="pill dev">In Development</span><div class="chev">&#9660;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CURRICULUM ============ -->
+  <div class="scard" id="s-cur">
+    <div class="sc-hd"><h2>Curriculum</h2></div>
+    <div class="sc-bd" style="gap:5px">
+      <div class="irow" tabindex="0" role="button" data-sheet="m-hours">
+        <div class="rl"><div class="rk">Digital Contact Hours</div><div class="rs">3.0% of the curriculum</div></div>
+        <div class="rr"><span class="rn">67.8</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-hyg">
+        <div class="rl"><div class="rk">Hygiene Competency</div><div class="rs g">Already implemented</div></div>
+        <div class="rr"><span class="rn">2027</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-micro">
+        <div class="rl"><div class="rk">Micro-Credential</div><div class="rs">Digital dentistry badges</div></div>
+        <div class="rr"><span class="pill dev">In Development</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-autech">
+        <div class="rl"><div class="rk">Augusta Tech Partnership</div><div class="rs">Design and manufacturing</div></div>
+        <div class="rr"><span class="pill live">Approved</span><div class="chev">&#9660;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RESEARCH, IP & GRANTS ============ -->
+  <div class="scard" id="s-res">
+    <div class="sc-hd"><h2>Research, Scholarship &amp; IP</h2><span class="note">Tap for the full detail</span></div>
+    <div class="sc-bd" style="gap:5px">
+      <div class="irow" tabindex="0" role="button" data-sheet="m-manu">
+        <div class="rl"><div class="rk">Digital Tech Manuscripts</div><div class="rs g">2 accepted, 3 submitted, 2 in revision</div></div>
+        <div class="rr"><span class="rn">8</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-book">
+        <div class="rl"><div class="rk">Textbook Chapter</div><div class="rs g">Phillips, 14th edition</div></div>
+        <div class="rr"><span class="rn">1</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-gies">
+        <div class="rl"><div class="rk">ADEA Gies Foundation Grant</div><div class="rs g">Awarded &middot; AI-Enhanced 3D Manuals</div></div>
+        <div class="rr"><span class="rn">$38,000</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-ip">
+        <div class="rl"><div class="rk">IP Portfolio</div><div class="rs">1 granted &middot; 3 under application &middot; 2 planned</div></div>
+        <div class="rr"><span class="rn">6</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-fab">
+        <div class="rl"><div class="rk">Research Fabrication</div><div class="rs">Custom jigs, holders, devices</div></div>
+        <div class="rr"><span class="pill live">Open to all groups</span><div class="chev">&#9660;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ENGAGEMENT ============ -->
+  <div class="scard" id="s-eng">
+    <div class="sc-hd"><h2>Engagement</h2></div>
+    <div class="sc-bd" style="gap:5px">
+      <div class="irow" tabindex="0" role="button" data-sheet="m-scana">
+        <div class="rl"><div class="rk">Scanapalooza Vendors</div><div class="rs g">August 8, 2026</div></div>
+        <div class="rr"><span class="rn">6</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-etc">
+        <div class="rl"><div class="rk">ETC Club</div><div class="rs">Faculty mentor</div></div>
+        <div class="rr"><span class="pill live">Active</span><div class="chev">&#9660;</div></div>
+      </div>
+      <div class="irow" tabindex="0" role="button" data-sheet="m-survey">
+        <div class="rl"><div class="rk">Faculty Survey</div><div class="rs">Dr. David Clary</div></div>
+        <div class="rr"><span class="pill live">Open</span><div class="chev">&#9660;</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EXECUTIVE SUMMARY ============ -->
+  <div class="scard" id="s-sum">
+    <div class="sc-hd"><h2>Executive Summary</h2><span class="note">Three wins, three concerns &middot; tap for full text</span></div>
+    <div class="sc-bd sum-bd">
+      <div class="wins" tabindex="0" role="button" data-sheet="m-wins">
+        <div class="wc-hd win">Wins</div>
+        <div class="wc-row"><div class="wc-n">1</div><div class="wc-b">Formlabs 4 equipment updated</div></div>
+        <div class="wc-row"><div class="wc-n">2</div><div class="wc-b">Residency programs reaching production again</div></div>
+        <div class="wc-row"><div class="wc-n">3</div><div class="wc-b">Innovation across the board</div></div>
+      </div>
+      <div class="wins concern" tabindex="0" role="button" data-sheet="m-cons">
+        <div class="wc-hd con">Concerns</div>
+        <div class="wc-row"><div class="wc-n">1</div><div class="wc-b">Production has collapsed to sporadic</div></div>
+        <div class="wc-row"><div class="wc-n">2</div><div class="wc-b">Faculty adoption is the bottleneck</div></div>
+        <div class="wc-row"><div class="wc-n">3</div><div class="wc-b">Software and systems approvals</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ASKS ============ -->
+  <div class="scard" id="s-ask" style="background:transparent;box-shadow:none;padding:0">
+    <div class="sc-hd" style="padding:0 2px"><h2>Asks</h2><span class="note">Tap for structure</span></div>
+    <div class="ask-bd">
+      <div class="askrow" tabindex="0" role="button" data-sheet="m-ask1">
+        <div class="askrow-top">
+          <span class="ask-pill">Ask 1</span>
+          <span class="askrow-t">Consolidate production into the Center for Digital Manufacturing</span>
+          <span class="askrow-chev">&#9660;</span>
+        </div>
+      </div>
+      <div class="askrow" tabindex="0" role="button" data-sheet="m-ask2">
+        <div class="askrow-top">
+          <span class="ask-pill">Ask 2</span>
+          <span class="askrow-t">Make digital micro-credentialing mandatory for new faculty hires</span>
+          <span class="askrow-chev">&#9660;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /board -->
+
+<!-- ============ SHEET OVERLAY ============ -->
+<div class="ovl" id="ovl" aria-hidden="true">
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true">
+    <div class="sh-top">
+      <div style="min-width:0">
+        <div class="sh-eyebrow" id="shEyebrow"></div>
+        <div class="sh-title" id="shTitle"></div>
+      </div>
+      <button class="sh-x" id="shX" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="sh-body" id="shBody"></div>
+  </div>
+</div>
+
+<!-- ============ SHEET CONTENT STORE ============ -->
+<div id="store">
+
+  <div data-id="m-ado" data-eyebrow="Digital Adoption" data-title="Adoption bands, July 2026">
+    <div class="dsep"></div>
+    <p style="font-size:13.5px;color:var(--desc);line-height:1.65;font-weight:300">
+      Adoption is reported across three bands. Student adoption currently sits in the <b style="color:var(--navy);font-weight:600">green band</b>. Faculty adoption sits in the <b style="color:var(--navy);font-weight:600">red band</b> and is the primary constraint on the overall figure.
+    </p>
+    <p style="font-size:12.5px;color:var(--silver);line-height:1.65;font-weight:300;margin-top:12px">
+      Positions are informed estimates as of July 2026. No measured percentage is available. A measured figure, drawn from Romexis and Formlabs usage logs against available capacity, is planned for future reports. The faculty survey and the micro-credential program are the active levers.
+    </p>
+  </div>
+
+  <div data-id="m-scan" data-eyebrow="Equipment &amp; Infrastructure" data-title="46 Intraoral Scanners">
+    <div class="dsep"></div>
+    <div class="dh">Models</div>
+    <div class="drow"><span class="k">Planmeca Emerald</span><span class="v">15</span></div>
+    <div class="drow"><span class="k">Planmeca Emerald S</span><span class="v g">31</span></div>
+    <div class="dh" style="margin-top:16px">Locations</div>
+    <div class="drow"><span class="k">Simulation Lab</span><span class="v">25</span></div>
+    <div class="drow"><span class="k">Junior Clinic</span><span class="v">7</span></div>
+    <div class="drow"><span class="k">Senior Clinic</span><span class="v">6</span></div>
+    <div class="drow"><span class="k">Production Lab</span><span class="v">1</span></div>
+    <div class="drow"><span class="k">AEGD, Faculty, Perio, GPR, OMFS, Peds, Pros<em>one each</em></span><span class="v">7</span></div>
+  </div>
+
+  <div data-id="m-mill" data-eyebrow="Equipment &amp; Infrastructure" data-title="4 Milling Units">
+    <div class="dsep"></div>
+    <div class="dh">Units and function</div>
+    <div class="drow"><span class="k">PlanMill 30 S<em>wet, glass ceramics</em></span><span class="v">1</span></div>
+    <div class="drow"><span class="k">PlanMill 50 S<em>dry, zirconia</em></span><span class="v">1</span></div>
+    <div class="drow"><span class="k">PlanMill 35 S<em>hybrid</em></span><span class="v">1</span></div>
+    <div class="drow"><span class="k">Roland DWX<em>dry, zirconia</em></span><span class="v">1</span></div>
+    <div class="dnote"><b>Materials:</b> IPS e.max ZirCAD and IPS e.max CAD.</div>
+  </div>
+
+  <div data-id="m-print" data-eyebrow="Equipment &amp; Infrastructure" data-title="5 3D Printers">
+    <div class="dsep"></div>
+    <div class="dh">Fleet</div>
+    <div class="drow"><span class="k">Form 4BL<em>large format, new 2026</em></span><span class="v g">1</span></div>
+    <div class="drow"><span class="k">Form 4B<em>new 2026</em></span><span class="v g">1</span></div>
+    <div class="drow"><span class="k">Form 3BL<em>large format</em></span><span class="v">1</span></div>
+    <div class="drow"><span class="k">Form 3B+</span><span class="v">2</span></div>
+    <div class="dnote"><b>Post-processing:</b> Form Wash L and Form Wash, Form Cure L and Form Cure, shared across both generations.</div>
+  </div>
+
+  <div data-id="m-cad" data-eyebrow="Equipment &amp; Infrastructure" data-title="6 CAD Licenses">
+    <div class="dsep"></div>
+    <div class="dh">Software stack</div>
+    <div class="drow"><span class="k">Romexis<em>acquisition</em></span><span class="v">Yes</span></div>
+    <div class="drow"><span class="k">PlanCAD Easy<em>all students and faculty</em></span><span class="v">All</span></div>
+    <div class="drow"><span class="k">PlanCAD Premium / exocad<em>advanced design</em></span><span class="v g">6</span></div>
+  </div>
+
+  <div data-id="m-cbct" data-eyebrow="Equipment &amp; Infrastructure" data-title="5 CBCT Units">
+    <div class="dsep"></div>
+    <div class="dh">Units and placement</div>
+    <div class="drow"><span class="k">Planmeca ProMax 3D Mid<em>Radiology</em></span><span class="v">1</span></div>
+    <div class="drow"><span class="k">Planmeca ProMax 3D Mid<em>OMFS</em></span><span class="v">1</span></div>
+    <div class="drow"><span class="k">Planmeca ProMax 3D Mid<em>Faculty Practice</em></span><span class="v">1</span></div>
+    <div class="drow"><span class="k">Carestream CS8100<em>Orthodontics</em></span><span class="v">1</span></div>
+    <div class="drow"><span class="k">J. Morita Veraview X800<em>Radiology</em></span><span class="v">1</span></div>
+    <div class="dnote">Radiology ProMax being replaced by <b>Planmeca Viso</b>.</div>
+  </div>
+
+  <div data-id="m-sens" data-eyebrow="Equipment &amp; Infrastructure" data-title="73 Digital Sensors">
+    <div class="dsep"></div>
+    <div class="dh">Sensor mix</div>
+    <div class="drow"><span class="k">xDR Digital<em>sizes 1 and 2</em></span><span class="v">31</span></div>
+    <div class="drow"><span class="k">Planmeca ProSensor</span><span class="v">15</span></div>
+    <div class="drow"><span class="k">Digora Optime</span><span class="v">27</span></div>
+  </div>
+
+  <div data-id="m-itline" data-eyebrow="Equipment &amp; Infrastructure" data-title="Dedicated IT Line">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill dev">In Development</span></div>
+    <div class="dh">Clinical support</div>
+    <div class="dnote">A separate dial number for clinical faculty, students, and staff needing <b>immediate IT help with scanners, sensors, and workstations during patient care</b>.</div>
+    <div class="dnote">Equipment that cannot be supported in the moment is equipment that stops being used. This is a direct lever on utilization.</div>
+  </div>
+
+  <div data-id="m-eqnote" data-eyebrow="Equipment &amp; Infrastructure" data-title="Equipment Note">
+    <div class="dsep"></div>
+    <div class="alert quiet" style="margin-top:0">
+      <div class="ah">Equipment Note</div>
+      <div class="ab">The <b>Formlabs 4 ecosystem</b> was commissioned this period, with thanks to Operations. Radiology's ProMax is being replaced by a <b>Planmeca Viso</b>. Sintering oven models and counts are being confirmed for the next report.</div>
+    </div>
+  </div>
+
+  <div data-id="m-194" data-eyebrow="Digital Production" data-title="194 Residency Pieces Milled">
+    <div class="dsep"></div>
+    <div class="dh">Digital production only</div>
+    <div class="drow"><span class="k">Indirect restorations<em>e.max lithium disilicate and zirconia</em></span><span class="v g">37</span></div>
+    <div class="drow"><span class="k">Provisional restorations<em>milled</em></span><span class="v g">157</span></div>
+    <div class="dnote"><b>Capability built.</b> The residency had no functional milling unit. One unit was purchased and one restored to function. Digital output before 2026 was essentially none.</div>
+    <div class="dnote">Conventional work (handmade wax-ups, putty matrices, manual corrections) is excluded. <b>Evidence:</b> milled restorations on models, Grad Pros, July 10, 2026.</div>
+  </div>
+
+  <div data-id="m-peak" data-eyebrow="Digital Production" data-title="600+ Peak Output, 2025">
+    <div class="dsep"></div>
+    <div class="dh">Predoctoral timeline</div>
+    <div class="drow"><span class="k">2022</span><span class="v">Sporadic</span></div>
+    <div class="drow"><span class="k">2023</span><span class="v">50+</span></div>
+    <div class="drow"><span class="k">2024</span><span class="v">350+</span></div>
+    <div class="drow"><span class="k">2025</span><span class="v g">600+</span></div>
+    <div class="drow"><span class="k">2026 YTD</span><span class="v">Sporadic</span></div>
+  </div>
+
+  <div data-id="m-tech" data-eyebrow="Digital Production" data-title="Technician Line Open 11 Months">
+    <div class="dsep"></div>
+    <div class="dh">Capacity risk</div>
+    <div class="drow"><span class="k">Position</span><span class="v">Lab Technician</span></div>
+    <div class="drow"><span class="k">Open since</span><span class="v">August 2025</span></div>
+    <div class="drow"><span class="k">Effect on output</span><span class="v">Sporadic</span></div>
+    <div class="dnote">This vacancy is the direct cause of the 2026 fall in production. Filling the line is the highest-leverage action available to recover the 2025 pace and protect the milling investment already made.</div>
+    <div class="alert">
+      <div class="ah">Capacity Risk</div>
+      <div class="ab"><b>2026 output has fallen back to sporadic.</b> The production lab technician line has been open since <b>August 2025</b>. Without a dedicated technician, in-house milling cannot run at the 2024 to 2025 pace.</div>
+    </div>
+  </div>
+
+  <div data-id="m-routine" data-eyebrow="Digital Manufacturing Capabilities" data-title="5 Routine Outputs">
+    <div class="dsep"></div>
+    <div class="dh">Milling</div>
+    <div class="drow"><span class="k">Single crowns<em>zirconia and lithium disilicate</em></span><span class="v g">Routine</span></div>
+    <div class="dh" style="margin-top:16px">Printing</div>
+    <div class="drow"><span class="k">Models<em>diagnostic and working</em></span><span class="v g">Routine</span></div>
+    <div class="drow"><span class="k">Surgical guides<em>implant planning</em></span><span class="v g">Routine</span></div>
+    <div class="drow"><span class="k">Research fixtures<em>jigs, sample holders, equipment parts</em></span><span class="v g">Routine</span></div>
+    <div class="drow"><span class="k">Promotional and outreach parts<em>DCG events and displays</em></span><span class="v g">Routine</span></div>
+  </div>
+
+  <div data-id="m-under" data-eyebrow="Digital Manufacturing Capabilities" data-title="9 Under-Used Capacity">
+    <div class="dsep"></div>
+    <div class="dh">Milling</div>
+    <div class="drow"><span class="k">Bridges<em>zirconia</em></span><span class="v">Occasional</span></div>
+    <div class="drow"><span class="k">Provisionals, graduate<em>PMMA</em></span><span class="v">Occasional</span></div>
+    <div class="drow"><span class="k">Inlays and onlays<em>lithium disilicate</em></span><span class="v">Rare</span></div>
+    <div class="drow"><span class="k">Provisionals, predoctoral<em>PMMA and composite blocks</em></span><span class="v">Rare</span></div>
+    <div class="drow"><span class="k">Denture base and teeth<em>milled, separate components</em></span><span class="v">Rare</span></div>
+    <div class="drow"><span class="k">Wax patterns<em>for casting and pressing</em></span><span class="v">Not in use</span></div>
+    <div class="dh" style="margin-top:16px">Printing</div>
+    <div class="drow"><span class="k">Provisionals<em>printed resin</em></span><span class="v g">Increasing</span></div>
+    <div class="drow"><span class="k">Occlusal guards<em>night guards and splints</em></span><span class="v">Rare</span></div>
+    <div class="drow"><span class="k">Denture base and teeth<em>printed</em></span><span class="v">Rare</span></div>
+  </div>
+
+  <div data-id="m-notavail" data-eyebrow="Digital Manufacturing Capabilities" data-title="3 Not Available">
+    <div class="dsep"></div>
+    <div class="dh">Requires PlanMill 60 S</div>
+    <div class="drow"><span class="k">Titanium<em>frameworks and abutments</em></span><span class="v">Blocked</span></div>
+    <div class="drow"><span class="k">Monolithic dentures<em>single-piece</em></span><span class="v">Blocked</span></div>
+    <div class="dh" style="margin-top:16px">Held by choice</div>
+    <div class="drow"><span class="k">Definitive restorations<em>printed permanent materials</em></span><span class="v">Held</span></div>
+    <div class="dnote">Printed definitive restorations are technically possible with the current fleet but are <b>not being produced pending further validation</b>.</div>
+  </div>
+
+  <div data-id="m-opp" data-eyebrow="Digital Manufacturing Capabilities" data-title="Opportunity &middot; Predoctoral Milling">
+    <div class="dsep"></div>
+    <div class="alert" style="margin-top:0">
+      <div class="ah">Opportunity &middot; Predoctoral Milling</div>
+      <div class="ab">Predoctoral students rarely mill, while the graduate program mills routinely. One route to close that gap is to give <b>full credit for milling a composite block and luting with glass ionomer</b> as a long-term provisional, which would put chairside milling in the hands of every predoctoral student. Increasing lithium disilicate inlays and onlays is a second route, and both use capacity that is already installed and paid for.</div>
+    </div>
+  </div>
+
+  <div data-id="m-nextrep" data-eyebrow="Digital Manufacturing Capabilities" data-title="Next Report">
+    <div class="dsep"></div>
+    <div class="alert quiet" style="margin-top:0">
+      <div class="ah">Next Report</div>
+      <div class="ab"><b>Exact unit counts by output type will be reported next cycle.</b> The entries above describe frequency of use rather than volume, because per-output figures are still being compiled from the mill and printer logs. From the next report onward, each output line will carry a hard number, which will also allow month over month tracking of where capacity is being used and where it is sitting idle.</div>
+    </div>
+  </div>
+
+  <div data-id="m-compare" data-eyebrow="Assessment Technology" data-title="114 Compare Stations">
+    <div class="dsep"></div>
+    <div class="dh">Planmeca Compare</div>
+    <div class="drow"><span class="k">Stations in the Simulation Lab<em>geometry-based preparation assessment</em></span><span class="v g">114</span></div>
+    <div class="dnote">Every Sim Lab station runs Compare, giving each student geometry-based feedback on preparations. This is the <b>platform layer beneath Grade FX</b>.</div>
+  </div>
+
+  <div data-id="m-haptic" data-eyebrow="Assessment Technology" data-title="3 Haptic Simulators">
+    <div class="dsep"></div>
+    <div class="dh">Virtual reality simulation</div>
+    <div class="drow"><span class="k">Haptic simulators<em>force-feedback preclinical training and assessment</em></span><span class="v">3</span></div>
+    <div class="dnote">Supports preclinical skill development and assessment alongside the Compare stations.</div>
+  </div>
+
+  <div data-id="m-gradefx" data-eyebrow="Assessment Technology" data-title="Grade FX">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill live">Functional</span></div>
+    <div class="dh">What it does</div>
+    <div class="dnote">Evaluates student preparations against the program's <b>actual course rubric and criteria</b>. Planmeca Compare provides geometric overlays but does not grade to program-specific rubrics. Grade FX closes that gap.</div>
+    <div class="dnote"><b>In-house developed intellectual property</b>, not a vendor tool.</div>
+    <a href="https://pachecodcg.github.io/gradefx" target="_blank" rel="noopener" class="pill live" style="margin-top:14px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:10px;padding:5px 11px">Open Grade FX <span style="font-size:11px">&#8599;</span></a>
+  </div>
+
+  <div data-id="m-gradefxp" data-eyebrow="Assessment Technology" data-title="Grade FX+">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill dev">In Development</span></div>
+    <div class="dh">Training requirement</div>
+    <div class="drow"><span class="k">Scans needed<em>two preps per student, prior year</em></span><span class="v">200</span></div>
+    <div class="drow"><span class="k">Gradesheets<em>corresponding Excel records</em></span><span class="v">Required</span></div>
+    <div class="dh" style="margin-top:16px">Data collection vehicle</div>
+    <div class="dnote"><b>RSFX 5311 session.</b> Students scan prior-year preps, grade them on paper against the rubric, then evaluate in Planmeca Compare. Generates the training dataset while teaching scanning, rubric literacy, software fluency, and self-assessment. Supports faculty calibration. Coordinated with Dr. Tarrazzi.</div>
+  </div>
+
+  <div data-id="m-hours" data-eyebrow="Curriculum &amp; Competency" data-title="67.8 Digital Contact Hours">
+    <div class="dsep"></div>
+    <div class="dh">Digital dentistry hours by course</div>
+    <div class="drow"><span class="k">RSOC 5311<em>Occlusal Analysis, D2 Fall</em></span><span class="v g">13.0 h</span></div>
+    <div class="drow"><span class="k">RSFX 5412<em>Fixed Prosthodontics II, D2 Spring</em></span><span class="v g">13.0 h</span></div>
+    <div class="drow"><span class="k">RSOC 5111<em>Dental Anatomy and Occlusion, D1 Fall</em></span><span class="v">11.0 h</span></div>
+    <div class="drow"><span class="k">RSOP 5212<em>Operative Dentistry II, D1 Spring</em></span><span class="v">9.0 h</span></div>
+    <div class="drow"><span class="k">RSFX 5311<em>Fixed Prosthodontics I, D2 Fall</em></span><span class="v">9.0 h</span></div>
+    <div class="drow"><span class="k">RSED 5511<em>Esthetic Restorative Dentistry, D3 Fall</em></span><span class="v">8.0 h</span></div>
+    <div class="drow"><span class="k">RSPR 5411, RSCD 5311, RSTP 5502, RSCA 5101<em>smaller allocations</em></span><span class="v">4.8 h</span></div>
+    <div class="dh" style="margin-top:16px">By year</div>
+    <div class="drow"><span class="k">D1</span><span class="v">20.8 h</span></div>
+    <div class="drow"><span class="k">D2</span><span class="v g">38.0 h</span></div>
+    <div class="drow"><span class="k">D3</span><span class="v">9.0 h</span></div>
+    <div class="dnote">Digital dentistry accounts for <b>67.8 of 2,294 topic hours</b> across 10 of 25 courses. It is the smallest of the major restorative topic areas, well behind Operative Dentistry (297 h), Fixed Partial Dentures (249 h), and Dental Materials (248 h). <b>Expanding digital contact hours is a curriculum priority.</b></div>
+    <div class="dnote">Figures are curriculum committee topic allocations. A session-level count returns <b>59.3 hours across 31 sessions and 9 courses</b>, the difference reflecting how multi-topic sessions are attributed.</div>
+  </div>
+
+  <div data-id="m-hyg" data-eyebrow="Curriculum &amp; Competency" data-title="Dental Hygiene Competency, Class of 2027">
+    <div class="dsep"></div>
+    <div class="dh">New competency</div>
+    <div class="dnote">A competency in <b>digital scanning and intraoral photography</b> was created for Dental Hygiene and is already implemented for the <b>Class of 2027</b>.</div>
+    <div class="dnote">Extends digital adoption beyond the predoctoral program into hygiene. A concrete, implemented educational outcome tied to a specific cohort.</div>
+  </div>
+
+  <div data-id="m-micro" data-eyebrow="Curriculum &amp; Competency" data-title="Micro-Credential">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill dev">In Development</span></div>
+    <div class="dh">Micro-credentialing</div>
+    <div class="dnote">A Digital Dentistry Micro-Credential is in development. It builds on the <b>faculty micro-credential model</b> already co-created and co-taught (Library Utilization, Literature Searching, and Scientific Writing, with Emily Harris).</div>
+    <div class="dh" style="margin-top:16px">Proposed structure</div>
+    <div class="drow"><span class="k">Module 1, Scanning<em>required of new faculty hires</em></span><span class="v g">4 sessions</span></div>
+    <div class="drow"><span class="k">Module 2, Designing<em>optional, prerequisite for milling</em></span><span class="v">4 sessions</span></div>
+    <div class="drow"><span class="k">Module 3, Milling<em>optional, requires Module 2</em></span><span class="v">4 sessions</span></div>
+    <div class="drow"><span class="k">Module 4, Printing<em>optional</em></span><span class="v">4 sessions</span></div>
+  </div>
+
+  <div data-id="m-autech" data-eyebrow="Curriculum &amp; Competency" data-title="Augusta Tech Partnership">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill live">Approved</span></div>
+    <div class="dh">Specialization in digital dental design and manufacturing</div>
+    <div class="dnote">A specialization developed in collaboration with <b>Augusta Technical College</b>. Mechanical Engineering Technology students gain hands-on experience working in the DCG digital lab.</div>
+    <div class="dnote">Builds an external pipeline of trained digital manufacturing technicians, which directly addresses the staffing constraint identified in this report.</div>
+  </div>
+
+  <div data-id="m-scana" data-eyebrow="Student &amp; Industry Engagement" data-title="6 Scanapalooza Vendors">
+    <div class="dsep"></div>
+    <div class="dh">Confirmed vendors</div>
+    <div class="drow"><span class="k">Dentsply Sirona</span><span class="v g">Yes</span></div>
+    <div class="drow"><span class="k">3Shape</span><span class="v g">Yes</span></div>
+    <div class="drow"><span class="k">Dexis</span><span class="v g">Yes</span></div>
+    <div class="drow"><span class="k">Planmeca</span><span class="v g">Yes</span></div>
+    <div class="drow"><span class="k">Medit</span><span class="v g">Yes</span></div>
+    <div class="drow"><span class="k">Aidite / Garland</span><span class="v g">Yes</span></div>
+    <div class="dnote"><b>2025 baseline:</b> approximately 60 attendees, 6 companies. Attendance expected to exceed that in 2026. Shining 3D interested but unconfirmed; Straumann did not respond.</div>
+  </div>
+
+  <div data-id="m-etc" data-eyebrow="Student &amp; Industry Engagement" data-title="ETC Club">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill live">Active</span></div>
+    <div class="dh">Emerging Technologies and Techniques Club</div>
+    <div class="dnote">Faculty mentor to the student organization. The club organizes <b>recurring lunch and learns</b> with digital technology companies and industry experts, and runs <b>Scanapalooza</b>, the annual intraoral scanner fair.</div>
+    <div class="dnote">Delivers direct student exposure to industry, emerging technology, and expert practitioners outside the formal curriculum, at essentially no cost to the college.</div>
+  </div>
+
+  <div data-id="m-survey" data-eyebrow="Student &amp; Industry Engagement" data-title="Faculty Survey">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill live">Open</span></div>
+    <div class="dh">DCG Digital Technologies Survey</div>
+    <div class="dnote">Documents which digital technologies faculty use, are comfortable teaching, and want to learn. Led by <b>Dr. David Clary</b>.</div>
+    <div class="drow" style="margin-top:8px"><span class="k">Reporting</span><span class="v">Anonymous</span></div>
+    <div class="drow"><span class="k">Duration</span><span class="v">8 to 10 min</span></div>
+    <div class="dnote">Results guide curriculum, faculty development, and equipment decisions.</div>
+  </div>
+
+  <div data-id="m-manu" data-eyebrow="Research, Scholarship &amp; Intellectual Property" data-title="8 Digital Tech Manuscripts">
+    <div class="dsep"></div>
+    <div class="dh">Accepted</div>
+    <div class="drow"><span class="k">Polyether Ether Ketone (PEEK) Surface Treatments for Resin Bonding: A Systematic Review and Network Meta-Analysis of In Vitro Studies<em>Dental Materials</em></span><span class="v g">Accepted</span></div>
+    <div class="drow"><span class="k">Allergenic Potential of (Meth)acrylates in Dentistry: A Narrative Review<em>Journal of the American Dental Association</em></span><span class="v g">Accepted</span></div>
+    <div class="dh" style="margin-top:16px">Under Minor Revision</div>
+    <div class="drow"><span class="k">Effect of Connector Dimensions on Fracture Resistance of High-Translucency Zirconia: An In Vitro and Finite Element Study<em>Journal of Prosthetic Dentistry</em></span><span class="v">Minor Revision</span></div>
+    <div class="drow"><span class="k">Clinical Performance of Digitally and Conventionally Fabricated Occlusal Devices<em>Journal of Prosthodontics</em></span><span class="v">Minor Revision</span></div>
+    <div class="dh" style="margin-top:16px">Submitted</div>
+    <div class="drow"><span class="k">Optical Characterization of Intraoral Scanners: Irradiance and Spectral Emission<em>Journal of Prosthetic Dentistry</em></span><span class="v">Submitted</span></div>
+    <div class="drow"><span class="k">Volatile Organic Compound and Particulate Matter Emissions from 3D Printing Resins<em>Journal of Prosthetic Dentistry</em></span><span class="v">Submitted</span></div>
+    <div class="drow"><span class="k">Single-Shade and Color-Adaptive Resin Composites: A Scoping Review<em>Journal of Dentistry</em></span><span class="v">Submitted</span></div>
+    <div class="dh" style="margin-top:16px">Ongoing</div>
+    <div class="drow"><span class="k">Digital Technology Utilization Surveys<em>Georgia dentists and DCG faculty</em></span><span class="v">Ongoing</span></div>
+  </div>
+
+  <div data-id="m-book" data-eyebrow="Research, Scholarship &amp; Intellectual Property" data-title="Textbook Chapter">
+    <div class="dsep"></div>
+    <div class="dh">Phillips Science of Dental Materials</div>
+    <div class="dnote">Author of <b>Chapter 15, Digital Technologies</b>, in Phillips' Science of Dental Materials, 14th edition (Elsevier, 2026).</div>
+    <div class="drow" style="margin-top:12px"><span class="k">Chapter<em>Digital Technologies</em></span><span class="v g">15</span></div>
+    <div class="drow"><span class="k">Edition</span><span class="v">14th</span></div>
+    <div class="drow"><span class="k">Publisher</span><span class="v">Elsevier, 2026</span></div>
+    <div class="dnote">Phillips is <b>the standard dental materials textbook</b> used across dental education. Authoring its digital technologies chapter places DCG at the reference point for how the discipline is taught nationally.</div>
+  </div>
+
+  <div data-id="m-gies" data-eyebrow="Research, Scholarship &amp; Intellectual Property" data-title="$38,000 ADEA Gies Foundation Grant">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill live">Awarded</span></div>
+    <div class="dh">AI-Enhanced 3D Manuals</div>
+    <div class="dnote"><b>An Open Educational Resource for Dental Training.</b> Replaces static two-dimensional instruction with interactive step-by-step 3D models captured through intraoral scanning and accessed via QR codes, enhanced by AI delivering adaptive feedback and learning analytics. No specialized hardware required, which keeps it affordable and scalable.</div>
+    <div class="drow" style="margin-top:12px"><span class="k">Principal Investigator<em>University at Buffalo School of Dental Medicine</em></span><span class="v">A. Matos</span></div>
+    <div class="drow"><span class="k">Core collaborator</span><span class="v g">Augusta University</span></div>
+    <div class="drow"><span class="k">Requested</span><span class="v">$50,000</span></div>
+    <div class="drow"><span class="k">Awarded</span><span class="v g">$38,000</span></div>
+  </div>
+
+  <div data-id="m-ip" data-eyebrow="Intellectual Property Portfolio" data-title="6 Tools in the IP Pipeline">
+    <div class="dsep"></div>
+    <div class="dh">Granted</div>
+    <div class="drow"><span class="k">Adaptive Learning Platform<em>US copyright registered, piloted at multiple institutions</em></span><span class="v g">Granted</span></div>
+    <div class="dh" style="margin-top:16px">Under Application</div>
+    <div class="drow"><span class="k">Shade Lab<em>digital shade selection and matching</em></span><span class="v">Applying</span></div>
+    <div class="drow"><span class="k">Door Display<em>ESP32 e-paper, live calendar integration</em></span><span class="v">Applying</span></div>
+    <div class="drow"><span class="k">Heads Up<em>in-house developed tool</em></span><span class="v">Applying</span></div>
+    <div class="dh" style="margin-top:16px">Planned</div>
+    <div class="drow"><span class="k">Grade FX<em>rubric-based digital grading, functional</em></span><span class="v">Will apply</span></div>
+    <div class="drow"><span class="k">Grade FX+<em>machine learning tier, in development</em></span><span class="v">Likely</span></div>
+    <div class="dnote">Both Grade FX tools are <b>in-house developed</b> with no vendor equivalent. Protection is the logical next step once Grade FX+ is validated.</div>
+    <div class="alert quiet">
+      <div class="ah">Innovation Pipeline</div>
+      <div class="ab">Six in-house tools now sit in the intellectual property pipeline, one granted and five moving toward application. Every one of them was built inside this office to solve a problem the commercial market does not address, and each is in active use at DCG rather than sitting as a concept.</div>
+    </div>
+  </div>
+
+  <div data-id="m-fab" data-eyebrow="Research, Scholarship &amp; Intellectual Property" data-title="Research Fabrication">
+    <div class="dsep"></div>
+    <div style="margin-bottom:10px"><span class="pill live">Open to all groups</span></div>
+    <div class="dh">Cross-department support</div>
+    <div class="dnote">The digital lab has produced multiple <b>custom jigs, sample holders, and testing devices</b> for Oral Biology and Dental Materials research. Fixtures are designed, printed, and iteratively refined in-house.</div>
+    <div class="dnote"><b>Open to all research groups</b> across the college.</div>
+  </div>
+
+  <div data-id="m-wins" data-eyebrow="Executive Summary" data-title="Three Wins">
+    <div class="dsep"></div>
+    <div class="sh-wc"><div class="wn" style="color:var(--green-dk)">1</div><div class="wb"><b>Formlabs 4 equipment updated.</b> The next-generation SLA printing and post-processing ecosystem is commissioned, with thanks to Operations.</div></div>
+    <div class="sh-wc"><div class="wn" style="color:var(--green-dk)">2</div><div class="wb"><b>Residency programs reaching production again.</b> Grad Pros milled 194 restorations in 2026, on units that were purchased and restored to function.</div></div>
+    <div class="sh-wc"><div class="wn" style="color:var(--green-dk)">3</div><div class="wb"><b>Innovation across the board.</b> Six tools in the IP pipeline, two papers accepted and three submitted, the ADEA Gies grant, the hygiene competency, the Phillips chapter, technology embedded in lectures and activities, and a growing digital curriculum.</div></div>
+  </div>
+
+  <div data-id="m-cons" data-eyebrow="Executive Summary" data-title="Three Concerns">
+    <div class="dsep"></div>
+    <div class="sh-wc"><div class="wn" style="color:var(--navy-lt)">1</div><div class="wb"><b>Production has collapsed to sporadic.</b> Milling fell from 600+ units in 2025. The lab technician line has been open since August 2025.</div></div>
+    <div class="sh-wc"><div class="wn" style="color:var(--navy-lt)">2</div><div class="wb"><b>Faculty adoption is the bottleneck.</b> Students are in the green band, faculty are in the red. It is what holds overall utilization down.</div></div>
+    <div class="sh-wc"><div class="wn" style="color:var(--navy-lt)">3</div><div class="wb"><b>Software and systems approvals.</b> Approvals are slow across the board, from philanthropy platforms for accepting donations to research and innovation tooling.</div></div>
+  </div>
+
+  <div data-id="m-ask1" data-navy="1" data-eyebrow="Ask 1" data-title="Consolidate production into the Center for Digital Manufacturing">
+    <div class="dsep"></div>
+    <div class="dnote" style="color:var(--silver-lt);margin-top:0;margin-bottom:14px">All four positions already approved and funded.</div>
+    <div class="ask-grid">
+      <div class="mini"><div class="mini-n">Dr. Riquieri</div><div class="mini-r">Manager, clinician, senior lab tech</div></div>
+      <div class="mini"><div class="mini-n">Emma</div><div class="mini-r">3D printing lab technician</div></div>
+      <div class="mini new"><div class="mini-n">Milling lab technician</div><div class="mini-r">Approved, currently vacant</div></div>
+      <div class="mini new"><div class="mini-n">CAD specialist</div><div class="mini-r">Approved</div></div>
+    </div>
+    <p class="askrow-note">On David's retirement, that position converts to a second <b>CAD and milling specialist</b>, completing the structure without adding headcount.</p>
+  </div>
+
+  <div data-id="m-ask2" data-navy="1" data-eyebrow="Ask 2" data-title="Make digital micro-credentialing mandatory for new faculty hires">
+    <div class="dsep"></div>
+    <div class="dnote" style="color:var(--silver-lt);margin-top:0;margin-bottom:14px">Module 1 required, the rest optional and sequential.</div>
+    <div class="mod-track">
+      <div class="mod req"><div class="mod-tag">Required</div><div class="mod-t">Scanning</div><div class="mod-s">4 sessions</div></div>
+      <div class="mod-arrow">&#8594;</div>
+      <div class="mod"><div class="mod-tag opt">Optional</div><div class="mod-t">Designing</div><div class="mod-s">4 sessions</div></div>
+      <div class="mod-arrow">&#8594;</div>
+      <div class="mod"><div class="mod-tag opt">Optional</div><div class="mod-t">Milling</div><div class="mod-s">4 sessions</div></div>
+      <div class="mod-arrow">&#8594;</div>
+      <div class="mod"><div class="mod-tag opt">Optional</div><div class="mod-t">Printing</div><div class="mod-s">4 sessions</div></div>
+    </div>
+    <p class="askrow-note">Strictly sequential. Milling cannot be entered without designing, because the workflow does not run that way in practice.</p>
+  </div>
+
+</div>
+
+<script>
+/* ---- SHEET open/close ---- */
+var ovl=document.getElementById('ovl'),sheet=document.getElementById('sheet'),
+    shE=document.getElementById('shEyebrow'),shT=document.getElementById('shTitle'),
+    shB=document.getElementById('shBody'),shX=document.getElementById('shX'),
+    lastFocus=null;
+function openSheet(id){
+  var src=document.querySelector('#store [data-id="'+id+'"]');
+  if(!src)return;
+  shE.innerHTML=src.getAttribute('data-eyebrow')||'';
+  shT.innerHTML=src.getAttribute('data-title')||'';
+  shB.innerHTML=src.innerHTML;
+  sheet.classList.toggle('navy',src.getAttribute('data-navy')==='1');
+  ovl.classList.add('on');
+  ovl.setAttribute('aria-hidden','false');
+  lastFocus=document.activeElement;
+  shX.focus();
+}
+function closeSheet(){
+  ovl.classList.remove('on');
+  ovl.setAttribute('aria-hidden','true');
+  if(lastFocus)lastFocus.focus();
+}
+shX.addEventListener('click',closeSheet);
+ovl.addEventListener('click',function(e){if(e.target===ovl)closeSheet();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSheet();});
+document.querySelectorAll('[data-sheet]').forEach(function(c){
+  function t(){openSheet(c.getAttribute('data-sheet'));}
+  c.addEventListener('click',t);
+  c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();t();}});
+});
+
+/* ---- ADOPTION gauges, segmented petal style ---- */
+function drawGauge(id, o){
+  var el=document.getElementById(id);
+  if(!el)return;
+  var cx=o.cx, cy=o.cy, R=o.R, ri=o.ri;
+  /* seven segments, red through green */
+  var cols=['#e8352b','#f4732c','#f9a52c','#f6cf2e','#b6d445','#5cbf46','#1e9e57'];
+  var n=cols.length, seg=180/n, gap=1.6, g='';
+  function P(rad,a){var t=(a-180)*Math.PI/180;return[cx+rad*Math.cos(t),cy+rad*Math.sin(t)];}
+
+  cols.forEach(function(col,i){
+    var a0=i*seg+gap/2, a1=(i+1)*seg-gap/2;
+    var p0=P(R,a0), p1=P(R,a1), q1=P(ri,a1), q0=P(ri,a0);
+    g+='<path d="M'+p0[0].toFixed(1)+' '+p0[1].toFixed(1)+
+       ' A'+R+' '+R+' 0 0 1 '+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+
+       ' L'+q1[0].toFixed(1)+' '+q1[1].toFixed(1)+
+       ' A'+ri+' '+ri+' 0 0 0 '+q0[0].toFixed(1)+' '+q0[1].toFixed(1)+
+       ' Z" fill="'+col+'"/>';
+  });
+
+  /* goal notch */
+  if(o.goal){
+    var ga=o.goal*180;
+    var m1=P(ri-2,ga), m2=P(R+3,ga);
+    g+='<line x1="'+m1[0].toFixed(1)+'" y1="'+m1[1].toFixed(1)+'" x2="'+m2[0].toFixed(1)+'" y2="'+m2[1].toFixed(1)+
+       '" stroke="#003359" stroke-width="2" stroke-dasharray="3 2.5" stroke-linecap="round"/>';
+    var gl=P(R+16,ga);
+    g+='<text x="'+gl[0].toFixed(1)+'" y="'+gl[1].toFixed(1)+'" text-anchor="middle" dy="3" font-family="Montserrat" font-weight="700" font-size="7.5" letter-spacing=".5" fill="#003359">GOAL</text>';
+  }
+
+  /* tapered needle: triangle from hub to tip */
+  var a=o.val*180;
+  var tip=P(ri-3, a);
+  var b1=P(o.hub*0.72, a+90);
+  var b2=P(o.hub*0.72, a-90);
+  g+='<path d="M'+tip[0].toFixed(1)+' '+tip[1].toFixed(1)+
+     ' L'+b1[0].toFixed(1)+' '+b1[1].toFixed(1)+
+     ' L'+b2[0].toFixed(1)+' '+b2[1].toFixed(1)+' Z" fill="#1a1a1a"/>';
+
+  /* hub: dark ring with white center */
+  g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+o.hub+'" fill="#1a1a1a"/>';
+  g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(o.hub*0.48).toFixed(1)+'" fill="#fff"/>';
+
+  if(o.cap){
+    g+='<text x="'+cx+'" y="'+(cy+o.capY)+'" text-anchor="middle" font-family="Montserrat" font-weight="600" font-size="7.5" letter-spacing="1" fill="#A5ACAF">'+o.cap+'</text>';
+  }
+  el.innerHTML=g;
+}
+
+drawGauge('gaugeSvg',{cx:95,cy:100,R:70,ri:44,val:0.42,goal:0.82,hub:7,cap:'AS OF JULY 2026',capY:26});
+drawGauge('studSvg',{cx:95,cy:102,R:72,ri:45,val:0.72,hub:7});
+drawGauge('facSvg',{cx:95,cy:102,R:72,ri:45,val:0.28,hub:7});
+
+/* ---- SCANNER donut ---- */
+(function(){
+  var data=[['Simulation Lab',25,'#003359'],['Junior Clinic',7,'#0a4a75'],['Specialty',7,'#336685'],['Senior Clinic',6,'#5c8da8'],['Production',1,'#A5ACAF']];
+  var total=46,cx=98,cy=100,r=70,ri=48,ang=-90,g='';
+  function P(rad,a){return[cx+rad*Math.cos(a*Math.PI/180),cy+rad*Math.sin(a*Math.PI/180)];}
+  data.forEach(function(d){
+    var a0=ang,a1=ang+d[1]/total*360;ang=a1;
+    var la=(a1-a0)>180?1:0;
+    var p0=P(r,a0),p1=P(r,a1),q0=P(ri,a1),q1=P(ri,a0);
+    g+='<path d="M'+p0[0].toFixed(1)+' '+p0[1].toFixed(1)+' A'+r+' '+r+' 0 '+la+' 1 '+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+
+       ' L'+q0[0].toFixed(1)+' '+q0[1].toFixed(1)+' A'+ri+' '+ri+' 0 '+la+' 0 '+q1[0].toFixed(1)+' '+q1[1].toFixed(1)+' Z" fill="'+d[2]+'" stroke="#fff" stroke-width="2.5"/>';
+  });
+  g+='<text x="'+cx+'" y="'+(cy+3)+'" text-anchor="middle" font-family="Montserrat" font-weight="700" font-size="26" letter-spacing="-1" fill="#003359">46</text>';
+  g+='<text x="'+cx+'" y="'+(cy+19)+'" text-anchor="middle" font-family="Montserrat" font-weight="600" font-size="8" letter-spacing="1.2" fill="#A5ACAF">SCANNERS</text>';
+  var ly=42;
+  data.forEach(function(d){
+    g+='<rect x="206" y="'+(ly-9)+'" width="10" height="10" rx="3" fill="'+d[2]+'"/>';
+    g+='<text x="222" y="'+ly+'" font-family="Source Sans 3" font-size="12" fill="#58676e">'+d[0]+'</text>';
+    g+='<text x="330" y="'+ly+'" text-anchor="end" font-family="Montserrat" font-weight="700" font-size="12" fill="#003359">'+d[1]+'</text>';
+    ly+=25;
+  });
+  document.getElementById('scanSvg').innerHTML=g;
+})();
+
+/* ---- PRODUCTION line ---- */
+(function(){
+  var W=700,H=200,padL=48,padR=22,base=H-32,top=24,max=650;
+  var pts=[{x:'2022',v:15,t:'sporadic',sp:1},{x:'2023',v:50,t:'50+'},{x:'2024',v:350,t:'350+'},
+           {x:'2025',v:600,t:'600+'},{x:'2026',v:20,t:'sporadic',sp:1,flag:1}];
+  var xs=pts.map(function(_,i){return padL+i*((W-padL-padR)/(pts.length-1));});
+  var ys=pts.map(function(p){return base-(p.v/max)*(base-top);});
+  var g='';
+  [0,200,400,600].forEach(function(gv){
+    var y=base-(gv/max)*(base-top);
+    g+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#f0f2f3"/>';
+    g+='<text x="'+(padL-10)+'" y="'+(y+3)+'" text-anchor="end" font-family="Montserrat" font-size="9.5" font-weight="600" fill="#A5ACAF">'+gv+'</text>';
+  });
+  var co=xs.map(function(x,i){return x+','+ys[i];});
+  g+='<path d="M'+xs[0]+','+base+' L'+co.join(' L')+' L'+xs[4]+','+base+' Z" fill="rgba(68,214,44,0.09)"/>';
+  g+='<path d="M'+co.slice(0,4).join(' L')+'" fill="none" stroke="#38b024" stroke-width="3" stroke-linecap="round"/>';
+  g+='<path d="M'+co.slice(3,5).join(' L')+'" fill="none" stroke="#0a4a75" stroke-width="3" stroke-dasharray="7 6" stroke-linecap="round"/>';
+  pts.forEach(function(p,i){
+    var c=p.flag?'#0a4a75':(i===3?'#38b024':'#003359');
+    g+='<circle cx="'+xs[i]+'" cy="'+ys[i]+'" r="5.5" fill="'+c+'" stroke="#fff" stroke-width="2.5"/>';
+    g+='<text x="'+xs[i]+'" y="'+(base+16)+'" text-anchor="middle" font-family="Montserrat" font-weight="600" font-size="11.5" fill="#003359">'+p.x+'</text>';
+    g+='<text x="'+xs[i]+'" y="'+(ys[i]-11)+'" text-anchor="middle" font-family="Montserrat" font-weight="'+(p.sp?'600':'700')+'" font-size="'+(p.sp?'10':'12.5')+'" letter-spacing="-.3" fill="'+(p.sp?'#A5ACAF':'#003359')+'">'+p.t+'</text>';
+  });
+  g+='<line x1="'+xs[4]+'" y1="'+ys[4]+'" x2="'+(xs[4]-10)+'" y2="'+(ys[4]-42)+'" stroke="#0a4a75" stroke-width="1.2"/>';
+  g+='<g transform="translate('+(xs[4]-168)+','+(ys[4]-68)+')">';
+  g+='<rect x="0" y="0" width="160" height="30" rx="9" fill="#0a4a75"/>';
+  g+='<circle cx="14" cy="15" r="4" fill="#44D62C"/>';
+  g+='<text x="26" y="13" font-family="Montserrat" font-weight="700" font-size="8" letter-spacing=".6" fill="#a8eea0">CAPACITY RISK</text>';
+  g+='<text x="26" y="24" font-family="Source Sans 3" font-size="9.5" fill="#fff">No lab technician since Aug 2025</text>';
+  g+='</g>';
+  document.getElementById('prodSvg').innerHTML=g;
+})();
+</script>
+</body>
+</html>
